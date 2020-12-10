@@ -2,3 +2,10 @@ Library/
 Temp/
          
   
+ProjectSettings/ProjectVersion.txt
+
+Packages/packages-lock.json
+
+ProjectSettings/HDRPProjectSettings.asset
+
+ProjectSettings/PackageManagerSettings.asset
