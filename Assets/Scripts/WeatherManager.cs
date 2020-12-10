@@ -1,11 +1,16 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 [ExecuteAlways]
 public class WeatherManager : MonoBehaviour
 {
 
-    public ParticleSystem rain;
-    public ParticleSystem snow;
+    public ParticleSystem Rain;
+    public ParticleSystem Snow;
+    public Button Btn_day;
+    public Button Btn_night;
+    public Button Btn_rain;
+    public Button Btn_snow;
 
     //Scene References
     [SerializeField] private Light DirectionalLight;
@@ -13,59 +18,64 @@ public class WeatherManager : MonoBehaviour
     //Variables
     [SerializeField, Range(0, 24)] private float TimeOfDay;
 
-    private bool stateKeyZ;
-    private bool stateKeyX;
-    private bool stateKeyC;
-    private bool stateKeyV;
-    private bool stateButton1;
-    private bool stateButton2;
-    private bool stateButton3;
-    private bool stateButton4;
+    public int state;
 
-    private void Update()
+
+    public void Start()
+    {
+        state = 0;
+        Btn_day.onClick.AddListener(SetDayLight);
+        Btn_night.onClick.AddListener(SetNightLight);
+        Btn_rain.onClick.AddListener(LetItRain);
+        Btn_snow.onClick.AddListener(LetItSnow);
+
+        Rain.Stop();
+        Snow.Stop();
+    }
+    public void Update()
     {
         if (Preset == null)
             return;
 
         if (Application.isPlaying)
         {
-            UpdateInteractivity();
-            // modifier l'état du bouton en fonction de l'état des touches du clavier
-            UpdateButtonStates();
-
-            // configurer l'animation de la température
             WeatherSetup();
         }
         else
         {
-            UpdateWeather(TimeOfDay / 24f,1);
+            UpdateWeather(TimeOfDay / 24f);
         }
     }
-
-    // fonction de mise à jour de l'interactivité
-    void UpdateInteractivity()
+    public void SetDayLight()
     {
-        stateKeyZ = Input.GetKey(KeyCode.Z);
-        stateKeyX = Input.GetKey(KeyCode.X);
-        stateKeyC = Input.GetKey(KeyCode.C);
-        stateKeyV = Input.GetKey(KeyCode.V);
+        state = 1;
+        
     }
-
-    private void UpdateWeather(float timePercent, int type)
+    public void SetNightLight()
     {
-        if (type == 1)
+        state = 2;
+    }
+    public void LetItRain()
+    {
+        state = 3;
+    }
+    public void LetItSnow()
+    {
+        state = 4;
+    }
+    private void UpdateWeather(float timePercent)
+    {
+       
+        //Set ambient and fog
+        RenderSettings.ambientLight = Preset.AmbientColor.Evaluate(timePercent);
+        RenderSettings.fogColor = Preset.FogColor.Evaluate(timePercent);
+
+        //If the directional light is set then rotate and set it's color, I actually rarely use the rotation because it casts tall shadows unless you clamp the value
+        if (DirectionalLight != null)
         {
-            //Set ambient and fog
-            RenderSettings.ambientLight = Preset.AmbientColor.Evaluate(timePercent);
-            RenderSettings.fogColor = Preset.FogColor.Evaluate(timePercent);
+            DirectionalLight.color = Preset.DirectionalColor.Evaluate(timePercent);
 
-            //If the directional light is set then rotate and set it's color, I actually rarely use the rotation because it casts tall shadows unless you clamp the value
-            if (DirectionalLight != null)
-            {
-                DirectionalLight.color = Preset.DirectionalColor.Evaluate(timePercent);
-
-                DirectionalLight.transform.localRotation = Quaternion.Euler(new Vector3((timePercent * 360f) - 90f, 170f, 0));
-            }
+            DirectionalLight.transform.localRotation = Quaternion.Euler(new Vector3((timePercent * 360f) - 90f, 170f, 0));
         }
 
     }
@@ -94,53 +104,56 @@ public class WeatherManager : MonoBehaviour
             }
         }
     }
-    // fonction qui modifie l'état des boutons en fonction de l'état de touches du clavier
-    void UpdateButtonStates()
-    {
-        stateButton1 = stateButton1 || stateKeyZ ? true : false;
-        stateButton2 = stateButton2 || stateKeyX ? true : false;
-        stateButton3 = stateButton3 || stateKeyC ? true : false;
-        stateButton4 = stateButton4 || stateKeyV ? true : false;
-    }
     void WeatherSetup()
     {
         print(TimeOfDay);
-        // jour
-        if (stateButton1)
-        { 
-            print("<jour>");
-            if (TimeOfDay > 3 && TimeOfDay < 15)
-            {
-                TimeOfDay += 0.1F;
-            }
-            else{
-                stateButton1 = false;
-            }
-        }
-        // nuit
-        if (stateButton2)
+        if (state == 1 || state == 2)
         {
-            print("<nuit>");
-            if (TimeOfDay > 4 && TimeOfDay < 16)
+            // jour
+            if (state == 1)
             {
-                print(TimeOfDay);
-                TimeOfDay -= 0.1F;
+                print("<jour>");
+                if (TimeOfDay > 3 && TimeOfDay < 15)
+                {
+                    TimeOfDay += 0.1F;
+                }
+                else
+                {
+                    state = 0;
+                }
+                Rain.Stop();
+                Snow.Stop();
             }
-            else
+            // nuit
+            if (state == 2)
             {
-                stateButton2 = false;
+                print("<nuit>");
+                if (TimeOfDay > 4 && TimeOfDay < 16)
+                {
+                    print(TimeOfDay);
+                    TimeOfDay -= 0.1F;
+                }
+                else
+                {
+                    state = 0;
+                }
             }
+            UpdateWeather(TimeOfDay / 24f);  
         }
-        // pluie
-        if (stateButton3)
+        else
         {
-            //rain.Emit(10000);
-        }
-        // soleil
-        if (stateButton4)
-        {
-            //snow.Emit(10000);
-        }
-        UpdateWeather(TimeOfDay / 24f,1);
+            // pluie
+            if (state == 3)
+            {
+                Rain.Play();
+                Snow.Stop();
+            }
+            // neige
+            if (state == 4)
+            {
+                Snow.Play();
+                Rain.Stop();
+            }
+        }  
     }
 }
