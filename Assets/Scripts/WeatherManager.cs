@@ -106,13 +106,13 @@ public class WeatherManager : MonoBehaviour
     }
     void WeatherSetup()
     {
-        print(TimeOfDay);
+        //print(TimeOfDay);
         if (state == 1 || state == 2)
         {
             // jour
             if (state == 1)
             {
-                print("<jour>");
+                //print("<jour>");
                 if (TimeOfDay > 3 && TimeOfDay < 15)
                 {
                     TimeOfDay += 0.1F;
@@ -127,7 +127,7 @@ public class WeatherManager : MonoBehaviour
             // nuit
             if (state == 2)
             {
-                print("<nuit>");
+                //print("<nuit>");
                 if (TimeOfDay > 4 && TimeOfDay < 16)
                 {
                     print(TimeOfDay);

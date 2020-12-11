@@ -1,0 +1,1 @@
+cmds.move (x,y,z, instanceResult)
